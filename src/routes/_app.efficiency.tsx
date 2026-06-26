@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine } from "recharts";
 import { Lightbulb } from "lucide-react";
 import { Card, PageHeader, cn } from "@/components/pulse/ui";
-import { kpis, dailyMetrics, PLATFORM_COLORS } from "@/data/mockData";
+import { usePulse } from "@/components/pulse/PulseDataProvider";
+import { PLATFORM_COLORS } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/efficiency")({
   head: () => ({ meta: [{ title: "A2S Efficiency — PulseBoard" }] }),
@@ -25,6 +26,7 @@ function rolling(values: number[], w = 7) {
 }
 
 function EfficiencyPage() {
+  const { kpis, dailyMetrics } = usePulse();
   const bbDaily = dailyMetrics.map((d) => d.bbA2s);
   const instaDaily = dailyMetrics.map((d) => d.instaA2s);
   const bbRolling = rolling(bbDaily);

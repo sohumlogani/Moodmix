@@ -1,12 +1,24 @@
-// PulseBoard mock data — MadMix demand intelligence
-export type Platform = "Big Basket" | "Instamart";
+// PulseBoard seed data — MadMix demand intelligence.
+// This is the canonical dataset: it seeds Supabase (scripts/seed.ts) and acts as
+// the offline fallback the app renders instantly before/without a live backend.
+import type {
+  Sku,
+  SkuMetric,
+  City,
+  DailyMetric,
+  MoodOpportunity,
+  DemandGap,
+  SeasonItem,
+  CityBuzz,
+  PulseData,
+} from "@/lib/types";
+import { computeKpis, formatInr, formatInrFull, PLATFORM_COLORS } from "@/lib/format";
 
-export const PLATFORM_COLORS: Record<Platform, string> = {
-  "Big Basket": "#84CC16",
-  Instamart: "#F97316",
-};
+// Re-export for backwards compatibility with existing imports.
+export type { Platform } from "@/lib/types";
+export { formatInr, formatInrFull, PLATFORM_COLORS };
 
-export const skus = [
+export const skus: Sku[] = [
   { id: "sku-1", name: "Chaat Corner Quinoa Millet Puffs", short: "Chaat Corner Puffs", category: "Puffs", size: "50g" },
   { id: "sku-2", name: "Cream Onion Jowar Millet Puffs", short: "Cream Onion Puffs", category: "Puffs", size: "50g" },
   { id: "sku-3", name: "Masala Masti Jowar Bhujia", short: "Masala Masti Bhujia", category: "Bhujia", size: "125g" },
@@ -22,16 +34,7 @@ export const skus = [
   { id: "sku-13", name: "Mighty Masala Sorghum Puffs", short: "Mighty Masala Puffs", category: "Puffs", size: "50g" },
 ];
 
-// Per-SKU global metrics
-export const skuMetrics: Record<string, {
-  revenue: number; // total period revenue (combined)
-  bbShare: number; // 0..1
-  trend: number; // % change vs last period
-  cities: number;
-  a2s: number;
-  health: number; // 0-100
-  tag: "Hero" | "Growing" | "Stagnating" | "Needs push";
-}> = {
+export const skuMetrics: Record<string, SkuMetric> = {
   "sku-1": { revenue: 78400, bbShare: 0.62, trend: 18.4, cities: 14, a2s: 0.34, health: 92, tag: "Hero" },
   "sku-2": { revenue: 64200, bbShare: 0.71, trend: -6.1, cities: 12, a2s: 0.41, health: 74, tag: "Stagnating" },
   "sku-3": { revenue: 51800, bbShare: 0.66, trend: 11.2, cities: 13, a2s: 0.38, health: 86, tag: "Hero" },
@@ -47,7 +50,7 @@ export const skuMetrics: Record<string, {
   "sku-13": { revenue: 7200, bbShare: 0.57, trend: -8.6, cities: 4, a2s: 0.71, health: 32, tag: "Needs push" },
 };
 
-export const cities = [
+export const cities: City[] = [
   { name: "Gurgaon", revenue: 58400, bbRev: 41200, instaRev: 17200, pods: 52000, podsPrev: 48500, opportunity: 78 },
   { name: "Hyderabad", revenue: 49100, bbRev: 32800, instaRev: 16300, pods: 43000, podsPrev: 41200, opportunity: 92 },
   { name: "Bangalore", revenue: 47200, bbRev: 30100, instaRev: 17100, pods: 41000, podsPrev: 40000, opportunity: 85 },
@@ -68,28 +71,25 @@ export const cities = [
   { name: "Nagpur", revenue: 3600, bbRev: 2800, instaRev: 800, pods: 3300, podsPrev: 3100, opportunity: 32 },
 ];
 
-// 30 days daily metrics
-function gen30(seedBase: number, mean: number, jitter: number) {
-  const out: number[] = [];
-  let v = mean;
-  for (let i = 0; i < 30; i++) {
-    const s = Math.sin(i * 0.7 + seedBase) * 0.4 + Math.cos(i * 0.3 + seedBase) * 0.3;
-    v = mean + s * jitter + (Math.random() - 0.5) * jitter * 0.3;
-    out.push(Math.max(0, v));
-  }
-  return out;
-}
-
+// Deterministic 30-day daily series (seeded so the bundled fallback is stable).
 const today = new Date("2025-04-30");
-export const dailyMetrics = Array.from({ length: 30 }, (_, i) => {
+function seededRand(seed: number) {
+  // Simple LCG — deterministic across runs so charts don't jump on reload.
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return () => (s = (s * 16807) % 2147483647) / 2147483647;
+}
+const rnd = seededRand(42);
+
+export const dailyMetrics: DailyMetric[] = Array.from({ length: 30 }, (_, i) => {
   const d = new Date(today);
   d.setDate(d.getDate() - (29 - i));
-  const bbSales = 8500 + Math.sin(i * 0.5) * 1800 + (Math.random() - 0.5) * 1200;
-  const bbSpend = bbSales * (0.28 + Math.sin(i * 0.4) * 0.06 + (Math.random() - 0.5) * 0.05);
-  const instaSales = 3100 + Math.sin(i * 0.6 + 1) * 700 + (Math.random() - 0.5) * 500;
-  const instaSpend = instaSales * (0.48 + Math.cos(i * 0.5) * 0.1 + (Math.random() - 0.5) * 0.06);
+  const bbSales = 8500 + Math.sin(i * 0.5) * 1800 + (rnd() - 0.5) * 1200;
+  const bbSpend = bbSales * (0.28 + Math.sin(i * 0.4) * 0.06 + (rnd() - 0.5) * 0.05);
+  const instaSales = 3100 + Math.sin(i * 0.6 + 1) * 700 + (rnd() - 0.5) * 500;
+  const instaSpend = instaSales * (0.48 + Math.cos(i * 0.5) * 0.1 + (rnd() - 0.5) * 0.06);
   return {
-    date: d.toISOString().slice(5, 10), // MM-DD
+    date: d.toISOString().slice(5, 10),
     fullDate: d.toISOString().slice(0, 10),
     bbSales: Math.round(bbSales),
     bbSpend: Math.round(bbSpend),
@@ -100,28 +100,9 @@ export const dailyMetrics = Array.from({ length: 30 }, (_, i) => {
   };
 });
 
-const bbTotalRev = dailyMetrics.reduce((s, d) => s + d.bbSales, 0);
-const instaTotalRev = dailyMetrics.reduce((s, d) => s + d.instaSales, 0);
-const bbTotalSpend = dailyMetrics.reduce((s, d) => s + d.bbSpend, 0);
-const instaTotalSpend = dailyMetrics.reduce((s, d) => s + d.instaSpend, 0);
+export const kpis = computeKpis(dailyMetrics, cities, skus, skuMetrics);
 
-export const kpis = {
-  totalRevenue: bbTotalRev + instaTotalRev,
-  bbRevenue: bbTotalRev,
-  instaRevenue: instaTotalRev,
-  avgA2s: +((bbTotalSpend + instaTotalSpend) / (bbTotalRev + instaTotalRev)).toFixed(3),
-  bbA2s: +(bbTotalSpend / bbTotalRev).toFixed(3),
-  instaA2s: +(instaTotalSpend / instaTotalRev).toFixed(3),
-  activeSkus: skus.length,
-  citiesCovered: cities.length,
-  totalPods: cities.reduce((s, c) => s + c.pods, 0),
-  topPlatform: "Big Basket" as Platform,
-  revenueChange: 12.4,
-  a2sChange: -3.2,
-  podsChange: 4.8,
-};
-
-export const moodMapOpportunities = [
+export const moodMapOpportunities: MoodOpportunity[] = [
   { id: 1, city: "Bangalore", event: "Millet Food Festival", weeks: 6, date: "Jun 12", sku: "Cream Onion Puffs", score: 88, sources: ["trends", "reddit", "event"], note: "Search interest for 'millet snacks Bangalore' up 34% MoM" },
   { id: 2, city: "Pune", event: "Sunburn Arena College Fest", weeks: 4, date: "May 28", sku: "Chaat Corner Puffs", score: 84, sources: ["trends", "event"], note: "Reddit r/pune buzzing about late-night snack runs" },
   { id: 3, city: "Delhi NCR", event: "Diwali Gifting Season", weeks: 5, date: "Jun 04", sku: "Mango Raisins", score: 81, sources: ["trends", "event"], note: "Healthy gift hamper queries trending in NCR" },
@@ -130,21 +111,20 @@ export const moodMapOpportunities = [
   { id: 6, city: "Chennai", event: "Music Season Concerts", weeks: 7, date: "Jun 19", sku: "Lemon Mirchi Bhujia", score: 68, sources: ["trends", "event"], note: "Regional flavour match — strong cultural fit" },
 ];
 
-export const demandGaps = [
+export const demandGaps: DemandGap[] = [
   { city: "Hyderabad", insight: "High search interest for 'millet bhujia', distribution at 60% of Bangalore" },
   { city: "Indore", insight: "Reddit chatter around healthy office snacks, 0 active POD growth" },
   { city: "Jaipur", insight: "Search demand for 'baked snacks' up 22%, current SKU mix skews fried" },
 ];
 
-export const seasonCalendar = [
+export const seasonCalendar: SeasonItem[] = [
   { season: "IPL Season", window: "Now → 4 weeks", sku: "Masala Masti Bhujia", cities: ["Hyderabad", "Mumbai", "Bangalore"], leadTime: "Push now" },
   { season: "Exam Season", window: "2 → 6 weeks", sku: "Mango Raisins", cities: ["Delhi NCR", "Gurgaon", "Noida"], leadTime: "Prep in 1 week" },
   { season: "Monsoon", window: "6 → 12 weeks", sku: "Pudina Picnic Bhujia", cities: ["Mumbai", "Pune", "Bangalore"], leadTime: "Plan now" },
   { season: "Diwali", window: "20 → 28 weeks", sku: "Mango Raisins gift pack", cities: ["All Tier-1"], leadTime: "Source SKU now" },
 ];
 
-// City buzz dots for India map (rough lat/lng → normalised x,y on a 100x120 SVG box)
-export const cityBuzz = [
+export const cityBuzz: CityBuzz[] = [
   { city: "Gurgaon", x: 38, y: 32, buzz: 62 },
   { city: "Delhi NCR", x: 39, y: 31, buzz: 81 },
   { city: "Noida", x: 40, y: 32, buzz: 58 },
@@ -159,12 +139,15 @@ export const cityBuzz = [
   { city: "Indore", x: 36, y: 48, buzz: 49 },
 ];
 
-export function formatInr(n: number): string {
-  if (n >= 100000) return `₹${(n / 100000).toFixed(2)}L`;
-  if (n >= 1000) return `₹${(n / 1000).toFixed(1)}k`;
-  return `₹${Math.round(n).toLocaleString("en-IN")}`;
-}
-
-export function formatInrFull(n: number): string {
-  return `₹${Math.round(n).toLocaleString("en-IN")}`;
-}
+// Assembled fallback the app renders instantly (and the seed script writes to Supabase).
+export const bundledSeed: PulseData = {
+  skus,
+  skuMetrics,
+  cities,
+  dailyMetrics,
+  kpis,
+  moodOpportunities: moodMapOpportunities,
+  demandGaps,
+  seasonCalendar,
+  cityBuzz,
+};

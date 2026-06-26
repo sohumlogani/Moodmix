@@ -1,9 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import { RefreshCw, Search, MessageCircle, CalendarDays, Sparkles, Radio, MapPin } from "lucide-react";
 import { Card, PageHeader, cn } from "@/components/pulse/ui";
-import { moodMapOpportunities, demandGaps, seasonCalendar, cityBuzz } from "@/data/mockData";
+import { usePulse, PULSE_QUERY_KEY } from "@/components/pulse/PulseDataProvider";
+import { refreshMoodMap } from "@/lib/moodmap";
+import { supabase } from "@/lib/supabase";
+import type { MoodOpportunity, DemandGap } from "@/lib/types";
 
 export const Route = createFileRoute("/_app/mood-map")({
   head: () => ({ meta: [{ title: "Mood Map — PulseBoard" }] }),
@@ -19,24 +23,63 @@ const stages = [
 ];
 
 function MoodMapPage() {
+  const { moodOpportunities, demandGaps, seasonCalendar } = usePulse();
+  const queryClient = useQueryClient();
+
   const [loading, setLoading] = useState(false);
   const [stageIdx, setStageIdx] = useState(0);
   const [version, setVersion] = useState(0);
+  const [override, setOverride] = useState<{ opportunities: MoodOpportunity[]; gaps: DemandGap[] } | null>(null);
+  const intro = useRef(false);
 
-  const refresh = () => {
+  const opportunities = override?.opportunities ?? moodOpportunities;
+  const gaps = override?.gaps ?? demandGaps;
+
+  // Runs the animated scan. When `live`, hits the Claude-backed server function
+  // and persists results to Supabase; otherwise it's a quick visual reveal.
+  const runScan = async (live: boolean) => {
     setLoading(true);
     setStageIdx(0);
-    const ivl = setInterval(() => setStageIdx((s) => Math.min(s + 1, stages.length - 1)), 380);
-    setTimeout(() => {
+    const ivl = setInterval(() => setStageIdx((s) => Math.min(s + 1, stages.length - 1)), 360);
+    const minDelay = new Promise((r) => setTimeout(r, live ? 1200 : 1600));
+
+    try {
+      if (live) {
+        const [res] = await Promise.all([refreshMoodMap(), minDelay]);
+        setOverride({ opportunities: res.opportunities, gaps: res.demandGaps });
+        await persist(res.opportunities, res.demandGaps);
+        queryClient.invalidateQueries({ queryKey: PULSE_QUERY_KEY });
+      } else {
+        await minDelay;
+      }
+    } catch (err) {
+      console.error("Mood Map refresh failed:", err);
+    } finally {
       clearInterval(ivl);
       setLoading(false);
       setVersion((v) => v + 1);
-    }, 2000);
+    }
+  };
+
+  const persist = async (opps: MoodOpportunity[], dg: DemandGap[]) => {
+    if (!supabase) return;
+    try {
+      await supabase.from("mood_opportunities").upsert(
+        opps.map((o) => ({
+          id: o.id, city: o.city, event: o.event, weeks: o.weeks, event_date: o.date,
+          sku: o.sku, score: o.score, sources: o.sources, note: o.note, refreshed_at: new Date().toISOString(),
+        })),
+      );
+      await supabase.from("demand_gaps").upsert(dg.map((g, i) => ({ id: i + 1, city: g.city, insight: g.insight })));
+    } catch (err) {
+      console.error("Persisting mood map failed:", err);
+    }
   };
 
   useEffect(() => {
-    // Auto-trigger first scan briefly for the satisfying reveal
-    refresh();
+    if (intro.current) return;
+    intro.current = true;
+    runScan(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -47,9 +90,9 @@ function MoodMapPage() {
         subtitle="Public signal intelligence — search, social, events — turned into collab opportunities"
         right={
           <button
-            onClick={refresh}
+            onClick={() => runScan(true)}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/20 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/20 disabled:opacity-50"
           >
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             {loading ? "Scanning…" : "Refresh Mood Map"}
@@ -86,7 +129,7 @@ function MoodMapPage() {
               <div className="space-y-3">
                 <h3 className="font-display text-base font-semibold text-text-dim">City × Event Opportunities</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {moodMapOpportunities.map((o, i) => (
+                  {opportunities.map((o, i) => (
                     <OpportunityCard key={o.id} o={o} delay={i * 0.05} />
                   ))}
                 </div>
@@ -102,8 +145,8 @@ function MoodMapPage() {
             <div>
               <h3 className="font-display text-base font-semibold text-text-dim mb-3 flex items-center gap-2"><Search className="h-4 w-4" />Search Demand Gaps</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {demandGaps.map((g, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
+                {gaps.map((g, i) => (
+                  <motion.div key={`${g.city}-${i}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
                     <Card className="p-4 border-l-2 border-l-accent">
                       <div className="text-xs uppercase tracking-wider text-accent">{g.city}</div>
                       <p className="mt-1.5 text-sm leading-relaxed">{g.insight}</p>
@@ -138,12 +181,12 @@ function MoodMapPage() {
   );
 }
 
-function OpportunityCard({ o, delay }: { o: typeof moodMapOpportunities[number]; delay: number }) {
+function OpportunityCard({ o, delay }: { o: MoodOpportunity; delay: number }) {
   const r = 26, c = 2 * Math.PI * r;
   const dash = (o.score / 100) * c;
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}>
-      <Card className="p-4 hover:bg-surface-2/40 transition-colors h-full">
+      <Card className="p-4 card-hover hover:bg-surface-2/40 h-full">
         <div className="flex items-start gap-4">
           <div className="relative shrink-0" style={{ width: 64, height: 64 }}>
             <svg width={64} height={64} className="-rotate-90">
@@ -187,7 +230,7 @@ function SourcePill({ icon: Icon, label }: { icon: any; label: string }) {
 }
 
 function IndiaMap() {
-  // Simple stylised "India shape" silhouette via blob, with positioned buzz dots
+  const { cityBuzz } = usePulse();
   return (
     <div className="relative aspect-[5/6] w-full">
       <svg viewBox="0 0 100 120" className="absolute inset-0 w-full h-full">
@@ -197,12 +240,10 @@ function IndiaMap() {
             <stop offset="100%" stopColor="#181B21" />
           </linearGradient>
         </defs>
-        {/* Stylised silhouette */}
         <path
           d="M 35 12 L 50 8 L 62 14 L 72 22 L 70 36 L 78 48 L 72 60 L 65 70 L 60 82 L 52 92 L 46 100 L 40 92 L 36 82 L 30 72 L 24 62 L 22 50 L 26 38 L 28 26 Z"
           fill="url(#indiaFill)" stroke="#2A2F38" strokeWidth="0.5"
         />
-        {/* Buzz dots */}
         {cityBuzz.map((c) => {
           const size = 1.2 + (c.buzz / 100) * 3.2;
           return (

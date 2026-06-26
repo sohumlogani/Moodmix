@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { type ReactNode, useEffect, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Package, MapPin, TrendingUp, Award, Sparkles, Settings, Activity, RefreshCw, ArrowUp, ArrowDown,
+  LayoutDashboard, Package, MapPin, TrendingUp, Award, Sparkles, Settings, Activity, RefreshCw, ArrowUp, ArrowDown, LogOut,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { usePulseStatus } from "./PulseDataProvider";
 
 export function cn(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
@@ -163,14 +165,15 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { live } = usePulseStatus();
   return (
     <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-border bg-surface/40">
-      <div className="flex h-16 items-center gap-2 border-b border-border px-5">
-        <div className="relative">
-          <Activity className="h-5 w-5 text-accent" />
+      <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-soft border border-accent/20">
+          <Activity className="h-4 w-4 text-accent" />
         </div>
         <div className="leading-tight">
-          <div className="font-display text-base font-semibold">PulseBoard</div>
+          <div className="font-display text-base font-semibold tracking-tight">PulseBoard</div>
           <div className="text-[10px] uppercase tracking-widest text-text-dim">MadMix</div>
         </div>
       </div>
@@ -183,21 +186,56 @@ export function Sidebar() {
               key={item.to}
               to={item.to}
               className={cn(
-                "group mb-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                active ? "bg-surface-2 text-foreground" : "text-text-dim hover:bg-surface-2/60 hover:text-foreground"
+                "group relative mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                active ? "text-foreground" : "text-text-dim hover:bg-surface-2/50 hover:text-foreground"
               )}
             >
-              <Icon className={cn("h-4 w-4", active && "text-accent")} />
-              <span>{item.label}</span>
-              {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent" />}
+              {active && (
+                <motion.span
+                  layoutId="nav-active"
+                  className="absolute inset-0 rounded-lg bg-surface-2 border border-border"
+                  transition={{ type: "spring", stiffness: 480, damping: 38 }}
+                />
+              )}
+              <Icon className={cn("relative h-4 w-4 transition-colors", active && "text-accent")} />
+              <span className="relative">{item.label}</span>
             </Link>
           );
         })}
       </nav>
-      <div className="border-t border-border p-4 text-[11px] text-text-dim">
-        <div className="flex items-center gap-2"><PulseDot tone="good" /> Live · synced 2 min ago</div>
+      <div className="border-t border-border p-3">
+        <div className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-text-dim">
+          <PulseDot tone={live ? "good" : "warn"} />
+          {live ? "Live · synced just now" : "Demo data"}
+        </div>
+        <UserMenu />
       </div>
     </aside>
+  );
+}
+
+function UserMenu() {
+  const { configured, user, signOut } = useAuth();
+  const navigate = useNavigate();
+  if (!configured) return null;
+  const name = (user?.user_metadata?.full_name as string) || user?.email?.split("@")[0] || "Account";
+  const handle = async () => {
+    await signOut();
+    navigate({ to: "/" });
+  };
+  return (
+    <button
+      onClick={handle}
+      className="mt-1 flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs text-text-dim transition-colors hover:bg-surface-2/60 hover:text-foreground"
+    >
+      <span className="flex items-center gap-2 min-w-0">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[10px] font-semibold text-accent uppercase">
+          {name.slice(0, 1)}
+        </span>
+        <span className="truncate">{name}</span>
+      </span>
+      <LogOut className="h-3.5 w-3.5 shrink-0" />
+    </button>
   );
 }
 
@@ -220,17 +258,25 @@ export function MobileNav() {
 }
 
 export function TopBar({ onRefresh, refreshing }: { onRefresh?: () => void; refreshing?: boolean }) {
+  const { live } = usePulseStatus();
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-bg/80 px-4 md:px-6 backdrop-blur">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-bg/70 px-4 md:px-6 backdrop-blur-xl">
       <div className="flex items-center gap-3 min-w-0">
         <div className="md:hidden flex items-center gap-2">
           <Activity className="h-5 w-5 text-accent" />
           <span className="font-display font-semibold">PulseBoard</span>
         </div>
-        <span className="hidden md:inline-flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1 text-xs">
+        <span className="hidden md:inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs">
           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
           <span className="text-text-dim">Brand:</span>
           <span className="font-medium">MadMix</span>
+        </span>
+        <span className={cn(
+          "hidden lg:inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px]",
+          live ? "border-good/30 bg-good/10 text-good" : "border-accent/30 bg-accent/10 text-accent"
+        )}>
+          <span className={cn("h-1.5 w-1.5 rounded-full", live ? "bg-good" : "bg-accent")} />
+          {live ? "Supabase · live" : "Demo mode"}
         </span>
       </div>
       <div className="flex items-center gap-2">

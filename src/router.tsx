@@ -9,6 +9,8 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
+    // Preload route code on hover/focus so tab changes feel instant.
+    defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
   });
 

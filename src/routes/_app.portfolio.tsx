@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Card, PageHeader, HealthRing, Stagger, StaggerItem, cn } from "@/components/pulse/ui";
-import { skus, skuMetrics, formatInr } from "@/data/mockData";
+import { usePulse } from "@/components/pulse/PulseDataProvider";
+import { formatInr } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/portfolio")({
   head: () => ({ meta: [{ title: "Portfolio Scorecard — PulseBoard" }] }),
@@ -13,8 +14,9 @@ type Tag = "All" | "Hero" | "Growing" | "Stagnating" | "Needs push";
 const tags: Tag[] = ["All", "Hero", "Growing", "Stagnating", "Needs push"];
 
 function PortfolioPage() {
+  const { skus, skuMetrics } = usePulse();
   const [filter, setFilter] = useState<Tag>("All");
-  const items = useMemo(() => skus.map((s) => ({ ...s, ...skuMetrics[s.id] })).sort((a, b) => b.health - a.health), []);
+  const items = useMemo(() => skus.map((s) => ({ ...s, ...skuMetrics[s.id] })).sort((a, b) => b.health - a.health), [skus, skuMetrics]);
   const filtered = filter === "All" ? items : items.filter((i) => i.tag === filter);
 
   return (

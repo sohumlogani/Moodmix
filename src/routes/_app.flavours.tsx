@@ -6,7 +6,8 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, BarChart, Bar,
 } from "recharts";
 import { Card, PageHeader, cn, Delta } from "@/components/pulse/ui";
-import { skus, skuMetrics, cities, dailyMetrics, formatInr, formatInrFull, PLATFORM_COLORS } from "@/data/mockData";
+import { usePulse } from "@/components/pulse/PulseDataProvider";
+import { formatInr, formatInrFull, PLATFORM_COLORS } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/flavours")({
   head: () => ({ meta: [{ title: "Flavours — PulseBoard" }] }),
@@ -18,6 +19,7 @@ const chartTooltipStyle = {
 };
 
 function Flavours() {
+  const { skus, skuMetrics, cities, dailyMetrics } = usePulse();
   const [selected, setSelected] = useState(skus[0].id);
   const [q, setQ] = useState("");
   const filtered = skus.filter((s) => s.name.toLowerCase().includes(q.toLowerCase()));

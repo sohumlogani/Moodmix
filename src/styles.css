@@ -42,14 +42,15 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  --bg: #0F1115;
-  --surface: #181B21;
-  --surface-2: #21252D;
-  --border: #2A2F38;
+  --radius: 0.7rem;
+  --bg: #0D0F13;
+  --surface: #16191F;
+  --surface-2: #20242C;
+  --border: #282D37;
   --text: #ECEDEF;
-  --text-dim: #8B919C;
+  --text-dim: #888F9B;
   --accent: #E8A03D;
+  --accent-soft: rgba(232, 160, 61, 0.12);
   --accent-2: #4ADE80;
   --accent-3: #F87171;
   --accent-4: #60A5FA;
@@ -86,6 +87,18 @@
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 6px; }
 ::-webkit-scrollbar-thumb:hover { background: #353a45; }
+
+/* Subtle card lift used across the app */
+.card-hover { transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease; }
+.card-hover:hover { transform: translateY(-2px); }
+
+/* Gradient text accent for headlines */
+.text-gradient {
+  background: linear-gradient(90deg, var(--text) 0%, var(--accent) 140%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }

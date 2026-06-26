@@ -5,7 +5,8 @@ import {
 } from "recharts";
 import { Card, KpiCard, PageHeader, Stagger, StaggerItem, ScoreBadge, PlatformSplitBar, cn } from "@/components/pulse/ui";
 import { PulseStrip } from "@/components/pulse/PulseStrip";
-import { kpis, dailyMetrics, skus, skuMetrics, cities, formatInr, formatInrFull, PLATFORM_COLORS } from "@/data/mockData";
+import { usePulse } from "@/components/pulse/PulseDataProvider";
+import { formatInr, formatInrFull, PLATFORM_COLORS } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — PulseBoard" }] }),
@@ -22,6 +23,7 @@ const chartTooltipStyle = {
 };
 
 function Dashboard() {
+  const { kpis, dailyMetrics, skus, skuMetrics, cities } = usePulse();
   const topSkus = [...skus]
     .map((s) => ({ ...s, ...skuMetrics[s.id] }))
     .sort((a, b) => b.revenue - a.revenue)

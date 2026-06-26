@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowDown, ArrowUp, MapPin, Zap } from "lucide-react";
 import { Card, PulseDot, cn } from "./ui";
+import { usePulse } from "./PulseDataProvider";
 
 type Signal = {
   icon: React.ComponentType<{ className?: string }>;
@@ -11,14 +12,38 @@ type Signal = {
   status: string;
 };
 
-const signals: Signal[] = [
-  { icon: Zap, label: "Big Basket A2S", value: "0.31", delta: { dir: "down", text: "0.04" }, tone: "good", status: "Healthy" },
-  { icon: Zap, label: "Instamart A2S", value: "0.52", delta: { dir: "up", text: "0.06" }, tone: "warn", status: "Watch" },
-  { icon: ArrowUp, label: "Top mover", value: "Chaat Corner Puffs", delta: { dir: "up", text: "18%" }, tone: "good", status: "Surging" },
-  { icon: MapPin, label: "Top opportunity", value: "Hyderabad", tone: "warn", status: "Act now" },
-];
+function a2sTone(v: number): "good" | "warn" | "bad" {
+  return v < 0.4 ? "good" : v < 0.55 ? "warn" : "bad";
+}
 
 export function PulseStrip() {
+  const { kpis, skus, skuMetrics, cities } = usePulse();
+
+  const topMover = [...skus]
+    .map((s) => ({ short: s.short, trend: skuMetrics[s.id]?.trend ?? 0 }))
+    .sort((a, b) => b.trend - a.trend)[0];
+  const topCity = [...cities].sort((a, b) => b.opportunity - a.opportunity)[0];
+
+  const signals: Signal[] = [
+    {
+      icon: Zap, label: "Big Basket A2S", value: kpis.bbA2s.toFixed(2),
+      tone: a2sTone(kpis.bbA2s), status: a2sTone(kpis.bbA2s) === "good" ? "Healthy" : "Watch",
+    },
+    {
+      icon: Zap, label: "Instamart A2S", value: kpis.instaA2s.toFixed(2),
+      tone: a2sTone(kpis.instaA2s), status: a2sTone(kpis.instaA2s) === "good" ? "Healthy" : "Watch",
+    },
+    {
+      icon: ArrowUp, label: "Top mover", value: topMover?.short ?? "—",
+      delta: topMover ? { dir: topMover.trend >= 0 ? "up" : "down", text: `${Math.abs(topMover.trend).toFixed(0)}%` } : undefined,
+      tone: "good", status: "Surging",
+    },
+    {
+      icon: MapPin, label: "Top opportunity", value: topCity?.name ?? "—",
+      tone: "warn", status: "Act now",
+    },
+  ];
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-border bg-surface">
       {/* Radial glow */}

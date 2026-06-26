@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDown, ArrowUp, ArrowUpDown, X } from "lucide-react";
 import { Card, PageHeader, ScoreBadge, PlatformSplitBar, cn, Delta } from "@/components/pulse/ui";
-import { cities, skus, skuMetrics, formatInr, formatInrFull } from "@/data/mockData";
+import { usePulse } from "@/components/pulse/PulseDataProvider";
+import { formatInr, formatInrFull } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/cities")({
   head: () => ({ meta: [{ title: "City Intelligence — PulseBoard" }] }),
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/_app/cities")({
 type SortKey = "revenue" | "pods" | "perPod" | "opportunity";
 
 function CitiesPage() {
+  const { cities } = usePulse();
   const [sort, setSort] = useState<SortKey>("revenue");
   const [desc, setDesc] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
@@ -21,7 +23,7 @@ function CitiesPage() {
     ...c,
     perPod: c.revenue / c.pods,
     podsDelta: ((c.pods - c.podsPrev) / c.podsPrev) * 100,
-  })), []);
+  })), [cities]);
 
   const sorted = useMemo(() => [...enriched].sort((a, b) => {
     const av = a[sort], bv = b[sort];
@@ -100,6 +102,7 @@ function Th({ children, k, sort, desc, onClick }: any) {
 }
 
 function CityDetail({ city, onClose }: { city: any; onClose: () => void }) {
+  const { skus, skuMetrics } = usePulse();
   const topSkus = [...skus].map((s) => ({ ...s, ...skuMetrics[s.id] })).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
   const recommendation = city.perPod > 1
     ? "Under-distributed: high revenue per POD — expand POD count by 15–20%."

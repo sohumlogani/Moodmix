@@ -103,7 +103,7 @@ export const dailyMetrics: DailyMetric[] = Array.from({ length: 30 }, (_, i) => 
 export const kpis = computeKpis(dailyMetrics, cities, skus, skuMetrics);
 
 export const moodMapOpportunities: MoodOpportunity[] = [
-  { id: 1, city: "Bangalore", event: "Millet Food Festival", weeks: 6, date: "Jun 12", sku: "Cream Onion Puffs", score: 88, sources: ["trends", "reddit", "event"], note: "Search interest for 'millet snacks Bangalore' up 34% MoM" },
+  { id: 1, city: "Bangalore", event: "Millet popcorn Festival", weeks: 6, date: "Jun 12", sku: "Cream Onion Puffs", score: 88, sources: ["trends", "reddit", "event"], note: "Search interest for 'millet snacks Bangalore' up 34% MoM" },
   { id: 2, city: "Pune", event: "Sunburn Arena College Fest", weeks: 4, date: "May 28", sku: "Chaat Corner Puffs", score: 84, sources: ["trends", "event"], note: "Reddit r/pune buzzing about late-night snack runs" },
   { id: 3, city: "Delhi NCR", event: "Diwali Gifting Season", weeks: 5, date: "Jun 04", sku: "Mango Raisins", score: 81, sources: ["trends", "event"], note: "Healthy gift hamper queries trending in NCR" },
   { id: 4, city: "Hyderabad", event: "IPL Playoff Watch Events", weeks: 2, date: "May 14", sku: "Masala Masti Bhujia", score: 79, sources: ["trends", "reddit"], note: "Spicy snack mentions spiking in r/hyderabad threads" },

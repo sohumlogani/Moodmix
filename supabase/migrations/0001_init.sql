@@ -112,7 +112,7 @@ create table if not exists public.demand_gaps (
 create table if not exists public.season_calendar (
   id         integer primary key,
   season     text not null,
-  window     text not null,
+  "window"   text not null,
   sku        text not null,
   cities     text[] not null default '{}',
   lead_time  text not null

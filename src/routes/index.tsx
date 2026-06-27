@@ -25,7 +25,6 @@ function Login() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   // Already signed in → jump straight to the dashboard.
   useEffect(() => {
@@ -35,15 +34,11 @@ function Login() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setNotice(null);
     setBusy(true);
     const res = mode === "signin" ? await signIn(email, password) : await signUp(email, password, name);
     setBusy(false);
     if (res.error) {
       setError(res.error);
-    } else if (mode === "signup") {
-      setNotice("Account created. If email confirmation is on, check your inbox — otherwise sign in.");
-      setMode("signin");
     } else {
       navigate({ to: "/dashboard" });
     }
@@ -115,7 +110,6 @@ function Login() {
             </Field>
 
             {error && <p className="text-xs text-bad">{error}</p>}
-            {notice && <p className="text-xs text-good">{notice}</p>}
 
             <button
               type="submit" disabled={busy}
@@ -126,7 +120,7 @@ function Login() {
 
             <button
               type="button"
-              onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); setNotice(null); }}
+              onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
               className="w-full text-center text-xs text-text-dim hover:text-foreground transition-colors"
             >
               {mode === "signin" ? "No account yet? Create one" : "Already have an account? Sign in"}

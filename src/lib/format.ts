@@ -3,9 +3,18 @@
 import type { Platform, City, DailyMetric, Sku, SkuMetric, Kpis } from "./types";
 
 export const PLATFORM_COLORS: Record<Platform, string> = {
-  "Big Basket": "#84CC16",
-  Instamart: "#F97316",
+  "Big Basket": "#34D399", // mint/emerald
+  Instamart: "#FB7185", // coral
 };
+
+// Pastel palette — one soft colour per SKU (assigned by index).
+export const SKU_COLORS = [
+  "#A7F3D0", "#FBCFE8", "#FDE68A", "#BFDBFE", "#DDD6FE", "#FECDD3",
+  "#99F6E4", "#FED7AA", "#E9D5FF", "#BAE6FD", "#F9A8D4", "#C7F9CC", "#FCD9B6",
+];
+export function skuColor(index: number): string {
+  return SKU_COLORS[index % SKU_COLORS.length];
+}
 
 export function formatInr(n: number): string {
   if (n >= 100000) return `₹${(n / 100000).toFixed(2)}L`;

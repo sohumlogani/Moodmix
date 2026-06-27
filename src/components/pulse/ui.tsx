@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Package, MapPin, TrendingUp, Award, Sparkles, Settings, Activity, RefreshCw, ArrowUp, ArrowDown, LogOut,
+  LayoutDashboard, MapPin, TrendingUp, Award, Sparkles, Settings, Activity, RefreshCw, ArrowUp, ArrowDown, LogOut, UploadCloud, Bell,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { usePulseStatus } from "./PulseDataProvider";
@@ -155,11 +155,11 @@ export function HealthRing({ score, size = 56 }: { score: number; size?: number 
 // ───────────────────────── Sidebar + TopBar ─────────────────────────
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/flavours", label: "Flavours", icon: Package },
   { to: "/cities", label: "Cities", icon: MapPin },
   { to: "/efficiency", label: "A2S Efficiency", icon: TrendingUp },
-  { to: "/portfolio", label: "Portfolio", icon: Award },
-  { to: "/mood-map", label: "Mood Map", icon: Sparkles },
+  { to: "/portfolio", label: "Flavours", icon: Award },
+  { to: "/mood-map", label: "Mood Board", icon: Sparkles },
+  { to: "/upload", label: "Upload", icon: UploadCloud },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -173,11 +173,25 @@ export function Sidebar() {
           <Activity className="h-4 w-4 text-accent" />
         </div>
         <div className="leading-tight">
-          <div className="font-display text-base font-semibold tracking-tight">PulseBoard</div>
+          <div className="font-display text-base font-semibold tracking-tight">MoodMix</div>
           <div className="text-[10px] uppercase tracking-widest text-text-dim">MadMix</div>
         </div>
       </div>
       <nav className="flex-1 px-3 py-4">
+        <Link
+          to="/whats-new"
+          className={cn(
+            "group relative mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+            pathname === "/whats-new" ? "text-foreground" : "text-text-dim hover:bg-surface-2/50 hover:text-foreground"
+          )}
+        >
+          {pathname === "/whats-new" && (
+            <motion.span layoutId="nav-active" className="absolute inset-0 rounded-lg bg-surface-2 border border-border" transition={{ type: "spring", stiffness: 480, damping: 38 }} />
+          )}
+          <Bell className={cn("relative h-4 w-4", pathname === "/whats-new" && "text-accent")} />
+          <span className="relative">What's New</span>
+          <span className="relative ml-auto h-1.5 w-1.5 rounded-full bg-accent" />
+        </Link>
         {navItems.map((item) => {
           const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
           const Icon = item.icon;
@@ -215,9 +229,9 @@ export function Sidebar() {
 }
 
 function UserMenu() {
-  const { configured, user, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  if (!configured) return null;
+  if (!user) return null;
   const name = (user?.user_metadata?.full_name as string) || user?.email?.split("@")[0] || "Account";
   const handle = async () => {
     await signOut();
@@ -242,7 +256,7 @@ function UserMenu() {
 export function MobileNav() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-surface/95 backdrop-blur grid grid-cols-7">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-surface/95 backdrop-blur grid grid-cols-8">
       {navItems.map((item) => {
         const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
         const Icon = item.icon;
@@ -264,7 +278,7 @@ export function TopBar({ onRefresh, refreshing }: { onRefresh?: () => void; refr
       <div className="flex items-center gap-3 min-w-0">
         <div className="md:hidden flex items-center gap-2">
           <Activity className="h-5 w-5 text-accent" />
-          <span className="font-display font-semibold">PulseBoard</span>
+          <span className="font-display font-semibold">MoodMix</span>
         </div>
         <span className="hidden md:inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs">
           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
@@ -280,6 +294,10 @@ export function TopBar({ onRefresh, refreshing }: { onRefresh?: () => void; refr
         </span>
       </div>
       <div className="flex items-center gap-2">
+        <Link to="/whats-new" aria-label="What's New" className="relative inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-text-dim transition-colors hover:text-foreground">
+          <Bell className="h-4 w-4" />
+          <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-accent ring-2 ring-bg" />
+        </Link>
         <div className="hidden sm:flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-text-dim mono">
           Apr 01 – Apr 30, 2025
         </div>
@@ -288,7 +306,7 @@ export function TopBar({ onRefresh, refreshing }: { onRefresh?: () => void; refr
           className="inline-flex items-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
         >
           <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
-          Refresh Mood Map
+          Refresh Mood Board
         </button>
       </div>
     </header>

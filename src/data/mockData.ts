@@ -102,13 +102,15 @@ export const dailyMetrics: DailyMetric[] = Array.from({ length: 30 }, (_, i) => 
 
 export const kpis = computeKpis(dailyMetrics, cities, skus, skuMetrics);
 
+// Upcoming events (dated after 27 Jun 2026 — festival calendar is date-certain;
+// a live event agent can layer in concerts/college fests later).
 export const moodMapOpportunities: MoodOpportunity[] = [
-  { id: 1, city: "Bangalore", event: "Millet Food Festival", weeks: 6, date: "Jun 12", sku: "Cream Onion Puffs", score: 88, sources: ["trends", "reddit", "event"], note: "Search interest for 'millet snacks Bangalore' up 34% MoM" },
-  { id: 2, city: "Pune", event: "Sunburn Arena College Fest", weeks: 4, date: "May 28", sku: "Chaat Corner Puffs", score: 84, sources: ["trends", "event"], note: "Reddit r/pune buzzing about late-night snack runs" },
-  { id: 3, city: "Delhi NCR", event: "Diwali Gifting Season", weeks: 5, date: "Jun 04", sku: "Mango Raisins", score: 81, sources: ["trends", "event"], note: "Healthy gift hamper queries trending in NCR" },
-  { id: 4, city: "Hyderabad", event: "IPL Playoff Watch Events", weeks: 2, date: "May 14", sku: "Masala Masti Bhujia", score: 79, sources: ["trends", "reddit"], note: "Spicy snack mentions spiking in r/hyderabad threads" },
-  { id: 5, city: "Mumbai", event: "Marathon Expo", weeks: 3, date: "May 21", sku: "Aloo Sev Bhujia", score: 72, sources: ["event", "reddit"], note: "Healthy-snack demand spike near event venues" },
-  { id: 6, city: "Chennai", event: "Music Season Concerts", weeks: 7, date: "Jun 19", sku: "Lemon Mirchi Bhujia", score: 68, sources: ["trends", "event"], note: "Regional flavour match — strong cultural fit" },
+  { id: 1, city: "Mumbai", event: "Ganesh Chaturthi pandals", weeks: 11, date: "Sep 14", sku: "Masala Masti Bhujia", score: 91, sources: ["trends", "event"], note: "Huge street-snacking window in Mumbai/Pune — spicy bhujia is the festive match." },
+  { id: 2, city: "Bangalore", event: "College fresher season", weeks: 6, date: "Aug 10", sku: "Chaat Corner Puffs", score: 87, sources: ["trends", "reddit", "event"], note: "New-intake campuses = peak impulse snacking; puffs over-index with 18-22 yr olds." },
+  { id: 3, city: "Kochi", event: "Onam Sadya season", weeks: 8, date: "Aug 26", sku: "Mango Raisins", score: 84, sources: ["trends", "event"], note: "Festive gifting + healthy-add-on demand spikes across Kerala & Bangalore Malayali pockets." },
+  { id: 4, city: "Gurgaon", event: "Raksha Bandhan gifting", weeks: 9, date: "Aug 28", sku: "Mango Raisins gift pack", score: 82, sources: ["trends", "event"], note: "Healthy-hamper queries climb in NCR — bundle a 'guilt-free rakhi box'." },
+  { id: 5, city: "Kolkata", event: "Durga Puja pandal-hopping", weeks: 16, date: "Oct 17", sku: "Cream Onion Puffs", score: 80, sources: ["trends", "event"], note: "4-day footfall marathon; on-the-go snacking is the entire occasion." },
+  { id: 6, city: "Hyderabad", event: "Independence Day weekend", weeks: 7, date: "Aug 15", sku: "BBQ Blast Bhujia", score: 76, sources: ["event", "reddit"], note: "Long-weekend gatherings & house parties — sharing packs move fastest." },
 ];
 
 export const demandGaps: DemandGap[] = [
@@ -118,10 +120,18 @@ export const demandGaps: DemandGap[] = [
 ];
 
 export const seasonCalendar: SeasonItem[] = [
-  { season: "IPL Season", window: "Now → 4 weeks", sku: "Masala Masti Bhujia", cities: ["Hyderabad", "Mumbai", "Bangalore"], leadTime: "Push now" },
-  { season: "Exam Season", window: "2 → 6 weeks", sku: "Mango Raisins", cities: ["Delhi NCR", "Gurgaon", "Noida"], leadTime: "Prep in 1 week" },
-  { season: "Monsoon", window: "6 → 12 weeks", sku: "Pudina Picnic Bhujia", cities: ["Mumbai", "Pune", "Bangalore"], leadTime: "Plan now" },
-  { season: "Diwali", window: "20 → 28 weeks", sku: "Mango Raisins gift pack", cities: ["All Tier-1"], leadTime: "Source SKU now" },
+  { season: "Monsoon snacking", window: "Now → 6 weeks", sku: "Pudina Picnic Bhujia", cities: ["Mumbai", "Pune", "Bangalore"], leadTime: "Push now" },
+  { season: "Independence weekend", window: "6 → 8 weeks", sku: "BBQ Blast Bhujia", cities: ["Hyderabad", "Delhi NCR", "Bangalore"], leadTime: "Prep in 2 weeks" },
+  { season: "Festive (Ganesh→Onam)", window: "8 → 12 weeks", sku: "Masala Masti Bhujia", cities: ["Mumbai", "Pune", "Kochi"], leadTime: "Plan now" },
+  { season: "Diwali gifting", window: "16 → 22 weeks", sku: "Mango Raisins gift pack", cities: ["All Tier-1"], leadTime: "Source SKU now" },
+];
+
+// Competitor sentiment (sample — a live agent can pull real Google/Amazon reviews).
+export interface CompetitorWatch { brand: string; rating: number; reviews: number; sentiment: number; positive: string; negative: string }
+export const competitors: CompetitorWatch[] = [
+  { brand: "Too Yumm!", rating: 4.1, reviews: 3120, sentiment: 72, positive: "Loved for multigrain chips & wide flavour range; strong value-for-money.", negative: "Complaints about over-salting and 'air-filled' packs." },
+  { brand: "The Healthy Binge", rating: 3.9, reviews: 540, sentiment: 64, positive: "Praised for genuinely clean ingredients and baked options.", negative: "Pricey vs portion size; limited quick-commerce availability." },
+  { brand: "Healthy Master", rating: 4.0, reviews: 880, sentiment: 68, positive: "Millet/jowar range gets repeat buyers; good for diet-conscious.", negative: "Texture inconsistency and slow delivery on D2C site." },
 ];
 
 export const cityBuzz: CityBuzz[] = [

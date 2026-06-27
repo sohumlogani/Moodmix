@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Cell,
@@ -6,21 +7,28 @@ import {
 import { Card, KpiCard, PageHeader, Stagger, StaggerItem, ScoreBadge, PlatformSplitBar, cn } from "@/components/pulse/ui";
 import { PulseStrip } from "@/components/pulse/PulseStrip";
 import { usePulse } from "@/components/pulse/PulseDataProvider";
-import { formatInr, formatInrFull, PLATFORM_COLORS } from "@/lib/format";
+import { formatInr, formatInrFull, PLATFORM_COLORS, skuColor } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — PulseBoard" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — MoodMix" }] }),
   component: Dashboard,
 });
 
 const chartTooltipStyle = {
-  background: "#181B21",
-  border: "1px solid #2A2F38",
+  background: "#FFFFFF",
+  border: "1px solid #E6E9EF",
   borderRadius: 8,
   fontSize: 12,
   fontFamily: "JetBrains Mono, monospace",
-  color: "#ECEDEF",
+  color: "#1B2028",
 };
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function monthLabel(ym: string): string {
+  const [y, m] = ym.split("-");
+  const idx = Number(m) - 1;
+  return `${MONTHS[idx] ?? m} '${(y ?? "").slice(2)}`;
+}
 
 function Dashboard() {
   const { kpis, dailyMetrics, skus, skuMetrics, cities } = usePulse();
@@ -32,11 +40,25 @@ function Dashboard() {
   const sparkBb = dailyMetrics.map((d) => d.bbSales);
   const sparkInsta = dailyMetrics.map((d) => d.instaSales);
 
+  // Roll daily data up to months — quick-commerce reporting is monthly, not daily.
+  const monthly = useMemo(() => {
+    const map: Record<string, { month: string; bbSales: number; instaSales: number }> = {};
+    for (const d of dailyMetrics) {
+      const key = d.fullDate.slice(0, 7); // YYYY-MM
+      const m = map[key] ?? (map[key] = { month: key, bbSales: 0, instaSales: 0 });
+      m.bbSales += d.bbSales;
+      m.instaSales += d.instaSales;
+    }
+    return Object.values(map)
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .map((m) => ({ ...m, label: monthLabel(m.month) }));
+  }, [dailyMetrics]);
+
   return (
     <div className="space-y-6 max-w-[1500px] mx-auto">
       <PageHeader
-        title="Demand Command Centre"
-        subtitle="Big Basket × Instamart · last 30 days · live"
+        title="Overview"
+        subtitle="Big Basket × Instamart · this period"
       />
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <PulseStrip />
@@ -84,7 +106,7 @@ function Dashboard() {
                   <stop offset="100%" stopColor={PLATFORM_COLORS.Instamart} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="#2A2F38" vertical={false} />
+              <CartesianGrid stroke="#E6E9EF" vertical={false} />
               <XAxis dataKey="date" stroke="#8B919C" fontSize={10} tickLine={false} axisLine={false} />
               <YAxis stroke="#8B919C" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => formatInrFull(v)} />
@@ -102,7 +124,7 @@ function Dashboard() {
               <div key={s.id} className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="flex items-center gap-2 min-w-0 truncate">
-                    <span className="mono text-text-dim w-4">{i + 1}</span>
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: skuColor(skus.findIndex((x) => x.id === s.id)) }} />
                     <span className="truncate">{s.short}</span>
                   </span>
                   <span className="mono shrink-0">{formatInr(s.revenue)}</span>
@@ -119,13 +141,13 @@ function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-display text-base font-semibold">Revenue Velocity</h3>
-              <p className="text-xs text-text-dim mt-0.5">Combined daily revenue volume</p>
+              <p className="text-xs text-text-dim mt-0.5">Monthly revenue volume · by platform</p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={dailyMetrics} margin={{ top: 4, right: 12, left: -10, bottom: 0 }}>
-              <CartesianGrid stroke="#2A2F38" vertical={false} />
-              <XAxis dataKey="date" stroke="#8B919C" fontSize={10} tickLine={false} axisLine={false} />
+            <BarChart data={monthly} margin={{ top: 4, right: 12, left: -10, bottom: 0 }} barCategoryGap="35%">
+              <CartesianGrid stroke="#E6E9EF" vertical={false} />
+              <XAxis dataKey="label" stroke="#8B919C" fontSize={10} tickLine={false} axisLine={false} />
               <YAxis stroke="#8B919C" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => formatInrFull(v)} />
               <Bar dataKey="bbSales" stackId="a" fill={PLATFORM_COLORS["Big Basket"]} radius={[0, 0, 0, 0]} />

@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/_app/settings")({
-  head: () => ({ meta: [{ title: "Settings — PulseBoard" }] }),
+  head: () => ({ meta: [{ title: "Settings — MoodMix" }] }),
   component: SettingsPage,
 });
 
@@ -94,12 +94,16 @@ function SettingsPage() {
       />
 
       <Card className="p-5">
-        <h3 className="font-display text-base font-semibold mb-4">Platform Connections</h3>
+        <h3 className="font-display text-base font-semibold mb-1">Quick-Commerce Connections</h3>
+        <p className="text-xs text-text-dim mb-4">Connect every platform MadMix sells on. Big Basket &amp; Instamart feed via your uploads today; the rest connect as you onboard them.</p>
         <div className="space-y-2">
-          <Conn name="Big Basket" status="connected" color="#84CC16" />
-          <Conn name="Instamart" status="connected" color="#F97316" />
-          <Conn name="Blinkit" status="soon" color="#FCD34D" />
-          <Conn name="Zepto" status="soon" color="#A78BFA" />
+          <Conn name="Big Basket" status="connected" color="#6EE7B7" />
+          <Conn name="Instamart (Swiggy)" status="connected" color="#FB7185" />
+          <Conn name="Blinkit" status="connect" color="#FCD34D" />
+          <Conn name="Zepto" status="connect" color="#A78BFA" />
+          <Conn name="Amazon Fresh" status="connect" color="#FF9F45" />
+          <Conn name="Flipkart Minutes" status="connect" color="#7DD3FC" />
+          <Conn name="JioMart" status="connect" color="#5EEAD4" />
         </div>
       </Card>
 
@@ -120,7 +124,7 @@ function SettingsPage() {
 
         <div className="mt-6 space-y-2">
           <Toggle label="Notify on A2S threshold breach" value={s.a2s} onChange={(v) => update({ a2s: v })} />
-          <Toggle label="Notify on new Mood Map opportunities" value={s.opportunities} onChange={(v) => update({ opportunities: v })} />
+          <Toggle label="Notify on new Mood Board opportunities" value={s.opportunities} onChange={(v) => update({ opportunities: v })} />
           <Toggle label="Notify on POD drops > 5%" value={s.podDrops} onChange={(v) => update({ podDrops: v })} />
         </div>
         {!configured && (
@@ -142,14 +146,12 @@ function SettingsPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs text-accent uppercase tracking-wider">Owner</span>
-            {configured && (
-              <button
-                onClick={async () => { await signOut(); navigate({ to: "/" }); }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-dim transition-colors hover:bg-surface-2 hover:text-foreground"
-              >
-                <LogOut className="h-3.5 w-3.5" />Sign out
-              </button>
-            )}
+            <button
+              onClick={async () => { await signOut(); navigate({ to: "/" }); }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-dim transition-colors hover:bg-surface-2 hover:text-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" />Sign out
+            </button>
           </div>
         </div>
       </Card>
@@ -157,9 +159,10 @@ function SettingsPage() {
   );
 }
 
-function Conn({ name, status, color }: { name: string; status: "connected" | "soon"; color: string }) {
+function Conn({ name, status, color }: { name: string; status: "connected" | "connect"; color: string }) {
+  const [requested, setRequested] = useState(false);
   return (
-    <div className={cn("flex items-center justify-between rounded-lg border border-border px-4 py-3", status === "soon" && "opacity-60")}>
+    <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
       <div className="flex items-center gap-3">
         <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
         <span className="text-sm font-medium">{name}</span>
@@ -168,10 +171,15 @@ function Conn({ name, status, color }: { name: string; status: "connected" | "so
         <span className="inline-flex items-center gap-1.5 rounded-full border border-good/30 bg-good/10 px-2.5 py-0.5 text-xs text-good">
           <Check className="h-3 w-3" />Connected
         </span>
-      ) : (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-2.5 py-0.5 text-xs text-text-dim">
-          <Lock className="h-3 w-3" />Coming soon
+      ) : requested ? (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 text-xs text-accent">
+          <Check className="h-3 w-3" />Requested
         </span>
+      ) : (
+        <button onClick={() => setRequested(true)}
+          className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-0.5 text-xs text-accent transition-colors hover:bg-accent/20">
+          Connect
+        </button>
       )}
     </div>
   );

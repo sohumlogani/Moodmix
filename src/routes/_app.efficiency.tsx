@@ -6,11 +6,11 @@ import { usePulse } from "@/components/pulse/PulseDataProvider";
 import { PLATFORM_COLORS } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/efficiency")({
-  head: () => ({ meta: [{ title: "A2S Efficiency — PulseBoard" }] }),
+  head: () => ({ meta: [{ title: "A2S Efficiency — MoodMix" }] }),
   component: EfficiencyPage,
 });
 
-const tooltipStyle = { background: "#181B21", border: "1px solid #2A2F38", borderRadius: 8, fontSize: 12, fontFamily: "JetBrains Mono, monospace", color: "#ECEDEF" };
+const tooltipStyle = { background: "#FFFFFF", border: "1px solid #E6E9EF", borderRadius: 8, fontSize: 12, fontFamily: "JetBrains Mono, monospace", color: "#1B2028" };
 
 function status(a2s: number) {
   if (a2s < 0.4) return { label: "Efficient", tone: "good" } as const;
@@ -46,6 +46,7 @@ function EfficiencyPage() {
         <PlatformCard name="Big Basket" color={PLATFORM_COLORS["Big Basket"]} a2s={kpis.bbA2s} rolling={bbRolling[bbRolling.length - 1]} status={bbStatus} />
         <PlatformCard name="Instamart" color={PLATFORM_COLORS.Instamart} a2s={kpis.instaA2s} rolling={instaRolling[instaRolling.length - 1]} status={instaStatus} />
       </div>
+      <p className="text-[10px] text-text-dim/60 -mt-3">Daily A2S figures are placeholders for now — final once the owner connects real platform spend data.</p>
 
       <Card className="p-4 md:p-5">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -61,7 +62,7 @@ function EfficiencyPage() {
         </div>
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={chartData}>
-            <CartesianGrid stroke="#2A2F38" vertical={false} />
+            <CartesianGrid stroke="#E6E9EF" vertical={false} />
             <XAxis dataKey="date" stroke="#8B919C" fontSize={10} tickLine={false} axisLine={false} />
             <YAxis stroke="#8B919C" fontSize={10} tickLine={false} axisLine={false} domain={[0, 1]} />
             <Tooltip contentStyle={tooltipStyle} />

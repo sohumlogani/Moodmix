@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, ArrowUp, ArrowUpDown, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, X, AlertTriangle, PackagePlus, Sparkles, RefreshCw, Loader2 } from "lucide-react";
 import { Card, PageHeader, ScoreBadge, PlatformSplitBar, cn, Delta } from "@/components/pulse/ui";
 import { usePulse } from "@/components/pulse/PulseDataProvider";
 import { formatInr, formatInrFull } from "@/lib/format";
+import { stockRiskSummary, type StockRiskResult } from "@/lib/stockrisk";
 
 export const Route = createFileRoute("/_app/cities")({
-  head: () => ({ meta: [{ title: "City Intelligence — PulseBoard" }] }),
+  head: () => ({ meta: [{ title: "City Intelligence — MoodMix" }] }),
   component: CitiesPage,
 });
 
@@ -36,7 +37,9 @@ function CitiesPage() {
 
   return (
     <div className="space-y-6 max-w-[1500px] mx-auto">
-      <PageHeader title="City Intelligence" subtitle="Distribution health and opportunity ranked across 18 cities" />
+      <PageHeader title="City Intelligence" subtitle={`Distribution health and opportunity ranked across ${cities.length} cities`} />
+
+      <StockRiskCard cities={enriched} />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
         <Card className="overflow-hidden">
@@ -86,6 +89,80 @@ function CitiesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function StockRiskCard({ cities }: { cities: any[] }) {
+  const [res, setRes] = useState<StockRiskResult | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const run = async () => {
+    setLoading(true);
+    try {
+      const input = cities.map((c) => ({
+        city: c.name, revenue: c.revenue, pods: c.pods, podsPrev: c.podsPrev,
+        perPod: c.perPod, podsDelta: c.podsDelta, opportunity: c.opportunity,
+      }));
+      setRes(await stockRiskSummary({ data: input }));
+    } catch (err) {
+      console.error("Stock risk failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { run(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  const levelCls = (l: string) =>
+    l === "high" ? "border-bad/40 bg-bad/10 text-bad" :
+    l === "medium" ? "border-accent/40 bg-accent/10 text-accent" :
+    "border-good/40 bg-good/10 text-good";
+
+  return (
+    <Card className="p-5 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="rounded-md border border-accent/40 bg-accent/10 p-2"><Sparkles className="h-4 w-4 text-accent" /></div>
+          <div>
+            <h3 className="font-display text-base font-semibold flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-accent" />Stock Risk · Replenishment
+            </h3>
+            <p className="text-xs text-text-dim mt-0.5">AI ranks where demand is outrunning distribution — replenish these first.</p>
+          </div>
+        </div>
+        <button onClick={run} disabled={loading}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs text-text-dim transition-colors hover:bg-surface-2 hover:text-foreground disabled:opacity-50">
+          <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+        </button>
+      </div>
+
+      {loading && !res ? (
+        <div className="flex items-center gap-2 text-sm text-text-dim py-2"><Loader2 className="h-4 w-4 animate-spin" />Analysing distribution vs demand…</div>
+      ) : res && res.items.length ? (
+        <>
+          <p className="text-sm leading-relaxed mb-3">{res.headline}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {res.items.map((it) => (
+              <div key={it.city} className="rounded-lg border border-border bg-surface/60 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-sm">{it.city}</span>
+                  <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider", levelCls(it.level))}>{it.level}</span>
+                </div>
+                <p className="mt-1.5 text-xs text-text-dim leading-relaxed">{it.reason}</p>
+                <div className="mt-2 flex items-start gap-1.5 text-xs text-accent">
+                  <PackagePlus className="h-3.5 w-3.5 shrink-0 mt-0.5" /><span>{it.action}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {res.source === "fallback" && (
+            <p className="mt-3 text-[11px] text-text-dim">Heuristic ranking · add ANTHROPIC_API_KEY for Claude-written analysis.</p>
+          )}
+        </>
+      ) : (
+        <p className="text-sm text-text-dim">Upload distribution data to see replenishment priorities.</p>
+      )}
+    </Card>
   );
 }
 

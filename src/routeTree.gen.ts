@@ -11,10 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppWhatsNewRouteImport } from './routes/_app.whats-new'
+import { Route as AppUploadRouteImport } from './routes/_app.upload'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppPortfolioRouteImport } from './routes/_app.portfolio'
 import { Route as AppMoodMapRouteImport } from './routes/_app.mood-map'
-import { Route as AppFlavoursRouteImport } from './routes/_app.flavours'
 import { Route as AppEfficiencyRouteImport } from './routes/_app.efficiency'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCitiesRouteImport } from './routes/_app.cities'
@@ -27,6 +28,16 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppWhatsNewRoute = AppWhatsNewRouteImport.update({
+  id: '/whats-new',
+  path: '/whats-new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUploadRoute = AppUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
@@ -41,11 +52,6 @@ const AppPortfolioRoute = AppPortfolioRouteImport.update({
 const AppMoodMapRoute = AppMoodMapRouteImport.update({
   id: '/mood-map',
   path: '/mood-map',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppFlavoursRoute = AppFlavoursRouteImport.update({
-  id: '/flavours',
-  path: '/flavours',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEfficiencyRoute = AppEfficiencyRouteImport.update({
@@ -69,20 +75,22 @@ export interface FileRoutesByFullPath {
   '/cities': typeof AppCitiesRoute
   '/dashboard': typeof AppDashboardRoute
   '/efficiency': typeof AppEfficiencyRoute
-  '/flavours': typeof AppFlavoursRoute
   '/mood-map': typeof AppMoodMapRoute
   '/portfolio': typeof AppPortfolioRoute
   '/settings': typeof AppSettingsRoute
+  '/upload': typeof AppUploadRoute
+  '/whats-new': typeof AppWhatsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cities': typeof AppCitiesRoute
   '/dashboard': typeof AppDashboardRoute
   '/efficiency': typeof AppEfficiencyRoute
-  '/flavours': typeof AppFlavoursRoute
   '/mood-map': typeof AppMoodMapRoute
   '/portfolio': typeof AppPortfolioRoute
   '/settings': typeof AppSettingsRoute
+  '/upload': typeof AppUploadRoute
+  '/whats-new': typeof AppWhatsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -91,10 +99,11 @@ export interface FileRoutesById {
   '/_app/cities': typeof AppCitiesRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/efficiency': typeof AppEfficiencyRoute
-  '/_app/flavours': typeof AppFlavoursRoute
   '/_app/mood-map': typeof AppMoodMapRoute
   '/_app/portfolio': typeof AppPortfolioRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/upload': typeof AppUploadRoute
+  '/_app/whats-new': typeof AppWhatsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -103,20 +112,22 @@ export interface FileRouteTypes {
     | '/cities'
     | '/dashboard'
     | '/efficiency'
-    | '/flavours'
     | '/mood-map'
     | '/portfolio'
     | '/settings'
+    | '/upload'
+    | '/whats-new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cities'
     | '/dashboard'
     | '/efficiency'
-    | '/flavours'
     | '/mood-map'
     | '/portfolio'
     | '/settings'
+    | '/upload'
+    | '/whats-new'
   id:
     | '__root__'
     | '/'
@@ -124,10 +135,11 @@ export interface FileRouteTypes {
     | '/_app/cities'
     | '/_app/dashboard'
     | '/_app/efficiency'
-    | '/_app/flavours'
     | '/_app/mood-map'
     | '/_app/portfolio'
     | '/_app/settings'
+    | '/_app/upload'
+    | '/_app/whats-new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -151,6 +163,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/whats-new': {
+      id: '/_app/whats-new'
+      path: '/whats-new'
+      fullPath: '/whats-new'
+      preLoaderRoute: typeof AppWhatsNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/upload': {
+      id: '/_app/upload'
+      path: '/upload'
+      fullPath: '/upload'
+      preLoaderRoute: typeof AppUploadRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -170,13 +196,6 @@ declare module '@tanstack/react-router' {
       path: '/mood-map'
       fullPath: '/mood-map'
       preLoaderRoute: typeof AppMoodMapRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/flavours': {
-      id: '/_app/flavours'
-      path: '/flavours'
-      fullPath: '/flavours'
-      preLoaderRoute: typeof AppFlavoursRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/efficiency': {
@@ -207,20 +226,22 @@ interface AppRouteChildren {
   AppCitiesRoute: typeof AppCitiesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEfficiencyRoute: typeof AppEfficiencyRoute
-  AppFlavoursRoute: typeof AppFlavoursRoute
   AppMoodMapRoute: typeof AppMoodMapRoute
   AppPortfolioRoute: typeof AppPortfolioRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppUploadRoute: typeof AppUploadRoute
+  AppWhatsNewRoute: typeof AppWhatsNewRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppCitiesRoute: AppCitiesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEfficiencyRoute: AppEfficiencyRoute,
-  AppFlavoursRoute: AppFlavoursRoute,
   AppMoodMapRoute: AppMoodMapRoute,
   AppPortfolioRoute: AppPortfolioRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppUploadRoute: AppUploadRoute,
+  AppWhatsNewRoute: AppWhatsNewRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

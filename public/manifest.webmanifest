@@ -1,0 +1,15 @@
+{
+  "name": "MoodMix — MadMix Demand Intelligence",
+  "short_name": "MoodMix",
+  "description": "Cross-platform demand intelligence, stock-risk AI and customer-voice mood map for MadMix.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0D0F13",
+  "theme_color": "#0D0F13",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

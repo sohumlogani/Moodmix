@@ -49,7 +49,7 @@ export function PulseStrip() {
       {/* Radial glow */}
       <div
         className="hero-glow pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-64 w-[140%] rounded-full"
-        style={{ background: "radial-gradient(ellipse at center, rgba(232,160,61,0.25), transparent 60%)" }}
+        style={{ background: "radial-gradient(ellipse at center, rgba(251,113,133,0.25), transparent 60%)" }}
       />
       <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
         {signals.map((s, i) => {

@@ -58,16 +58,19 @@ export function Sparkline({ data, color = "var(--accent)", height = 32 }: { data
   const range = max - min || 1;
   const w = 100, h = height;
   const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(" ");
+  // Sanitised id (CSS var() / hex contains chars that break url(#…) references) and
+  // style-based colour so CSS variables resolve in <stop> (attribute form defaults to black).
+  const gid = "spk-" + color.replace(/[^a-z0-9]/gi, "");
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full" style={{ height }}>
       <defs>
-        <linearGradient id={`spk-${color}`} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        <linearGradient id={gid} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" style={{ stopColor: color }} stopOpacity="0.35" />
+          <stop offset="100%" style={{ stopColor: color }} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" />
-      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#spk-${color})`} />
+      <polyline points={pts} fill="none" style={{ stroke: color }} strokeWidth="1.5" />
+      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#${gid})`} />
     </svg>
   );
 }
@@ -169,9 +172,7 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-border bg-surface/40">
       <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-soft border border-accent/20">
-          <Activity className="h-4 w-4 text-accent" />
-        </div>
+        <img src="/logo.jpg" alt="MoodMix" className="h-9 w-9 rounded-full object-cover" />
         <div className="leading-tight">
           <div className="font-display text-base font-semibold tracking-tight">MoodMix</div>
           <div className="text-[10px] uppercase tracking-widest text-text-dim">MadMix</div>
@@ -277,7 +278,7 @@ export function TopBar({ onRefresh, refreshing }: { onRefresh?: () => void; refr
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-bg/70 px-4 md:px-6 backdrop-blur-xl">
       <div className="flex items-center gap-3 min-w-0">
         <div className="md:hidden flex items-center gap-2">
-          <Activity className="h-5 w-5 text-accent" />
+          <img src="/logo.jpg" alt="MoodMix" className="h-7 w-7 rounded-full object-cover" />
           <span className="font-display font-semibold">MoodMix</span>
         </div>
         <span className="hidden md:inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs">

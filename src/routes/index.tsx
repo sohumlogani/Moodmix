@@ -79,9 +79,7 @@ function Login() {
         className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-surface/80 backdrop-blur p-8"
       >
         <div className="text-center">
-          <div className="mx-auto mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-accent/30 bg-accent/10">
-            <Activity className="h-6 w-6 text-accent" />
-          </div>
+          <img src="/logo.jpg" alt="MoodMix" className="mx-auto mb-5 h-20 w-20 rounded-full object-cover shadow-sm" />
           <h1 className="font-display text-3xl font-semibold tracking-tight">MoodMix</h1>
           <p className="mt-1 text-sm uppercase tracking-[0.2em] text-accent">MadMix Demand Intelligence</p>
         </div>
